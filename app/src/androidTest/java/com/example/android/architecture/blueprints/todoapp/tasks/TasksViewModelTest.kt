@@ -1,29 +1,41 @@
 package com.example.android.architecture.blueprints.todoapp.tasks
-
-import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.junit.Assert.*
-import org.junit.Test
-import org.junit.runner.RunWith
-
-@RunWith(AndroidJUnit4::class)
-class TasksViewModelTest {
-
-    @Test
-    fun addNewTask_setsNewTaskEvent() {
-
-        // Given a fresh ViewModel
-        val tasksViewModel = TasksViewModel(ApplicationProvider.getApplicationContext())
+import androidx.annotation.VisibleForTesting
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 
-        // When adding a new task
-        tasksViewModel.addNewTask()
+@VisibleForTesting(otherwise = VisibleForTesting.NONE)
+fun <T> LiveData<T>.getOrAwaitValue(
+    time: Long = 2,
+    timeUnit: TimeUnit = TimeUnit.SECONDS,
+    afterObserve: () -> Unit = {}
+): T {
+    var data: T? = null
+    val latch = CountDownLatch(1)
+    val observer = object : Observer<T> {
+        override fun onChanged(o: T?) {
+            data = o
+            latch.countDown()
+            this@getOrAwaitValue.removeObserver(this)
+        }
+    }
+    this.observeForever(observer)
 
-        // Then the new task event is triggered
+    try {
+        afterObserve.invoke()
 
+        // Don't wait indefinitely if the LiveData is not set.
+        if (!latch.await(time, timeUnit)) {
+            throw TimeoutException("LiveData value was never set.")
+        }
 
-
-
+    } finally {
+        this.removeObserver(observer)
     }
 
+    @Suppress("UNCHECKED_CAST")
+    return data as T
 }
