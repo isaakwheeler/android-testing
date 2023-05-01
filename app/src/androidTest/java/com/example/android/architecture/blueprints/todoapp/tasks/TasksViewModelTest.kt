@@ -1,41 +1,36 @@
 package com.example.android.architecture.blueprints.todoapp.tasks
-import androidx.annotation.VisibleForTesting
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.android.architecture.blueprints.todoapp.getOrAwaitValue
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.not
+import org.hamcrest.Matchers.nullValue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class TasksViewModelTest {
+
+    @get:Rule
+    var instantExecutorRule = InstantTaskExecutorRule()
 
 
-@VisibleForTesting(otherwise = VisibleForTesting.NONE)
-fun <T> LiveData<T>.getOrAwaitValue(
-    time: Long = 2,
-    timeUnit: TimeUnit = TimeUnit.SECONDS,
-    afterObserve: () -> Unit = {}
-): T {
-    var data: T? = null
-    val latch = CountDownLatch(1)
-    val observer = object : Observer<T> {
-        override fun onChanged(o: T?) {
-            data = o
-            latch.countDown()
-            this@getOrAwaitValue.removeObserver(this)
-        }
-    }
-    this.observeForever(observer)
+    @Test
+    fun addNewTask_setsNewTaskEvent() {
+        // Given a fresh ViewModel
+        val tasksViewModel = TasksViewModel(ApplicationProvider.getApplicationContext())
 
-    try {
-        afterObserve.invoke()
+        // When adding a new task
+        tasksViewModel.addNewTask()
 
-        // Don't wait indefinitely if the LiveData is not set.
-        if (!latch.await(time, timeUnit)) {
-            throw TimeoutException("LiveData value was never set.")
-        }
+        // Then the new task event is triggered
+        val value = tasksViewModel.newTaskEvent.getOrAwaitValue()
 
-    } finally {
-        this.removeObserver(observer)
+        assertThat(value.getContentIfNotHandled(), not(nullValue()))
+
+
     }
 
-    @Suppress("UNCHECKED_CAST")
-    return data as T
 }
