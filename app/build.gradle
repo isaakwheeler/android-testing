@@ -41,6 +41,7 @@ dependencies {
     // Architecture Components
     implementation "androidx.room:room-runtime:$roomVersion"
     implementation 'androidx.test.ext:junit-ktx:1.1.5'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
     kapt "androidx.room:room-compiler:$roomVersion"
     implementation "androidx.room:room-ktx:$roomVersion"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$archLifecycleVersion"
