@@ -1,6 +1,7 @@
 package com.example.android.architecture.blueprints.todoapp.statistics
 
 import com.example.android.architecture.blueprints.todoapp.data.Task
+import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.CoreMatchers.`is`
 import org.junit.Assert.*
 
@@ -17,7 +18,6 @@ class StatisticsUtilsTest {
             // Check the result
             assertThat(result.activeTasksPercent, `is`(100f))
             assertThat(result.completedTasksPercent, `is`(0f))
-            assertEquals(result.completedTasksPercent, 0f)
 
         }
 
